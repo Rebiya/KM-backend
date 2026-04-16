@@ -7,11 +7,43 @@ const {
   approveByType,
   rejectByType,
   getAllUsersCategoriesAnswers,
+  getAllInsights,
+  getAllQuestions,
 } = require("./service");
 const { isUuid } = require("../utils/validation");
 
 function createAdminRouter({ pool }) {
   const router = express.Router();
+
+  // Admin-only: list ALL insights (pending/approved/rejected)
+  router.get(
+    "/insights",
+    get_current_user,
+    require_role("admin"),
+    async (_req, res, next) => {
+      try {
+        const rows = await getAllInsights(pool);
+        return res.json(rows);
+      } catch (e) {
+        return next(e);
+      }
+    }
+  );
+
+  // Admin-only: list ALL questions (pending/approved/rejected)
+  router.get(
+    "/questions",
+    get_current_user,
+    require_role("admin"),
+    async (_req, res, next) => {
+      try {
+        const rows = await getAllQuestions(pool);
+        return res.json(rows);
+      } catch (e) {
+        return next(e);
+      }
+    }
+  );
 
   router.get(
     "/overview",

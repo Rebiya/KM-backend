@@ -219,4 +219,54 @@ async function getAllUsersCategoriesAnswers(pool) {
   };
 }
 
-module.exports = { approveInsight, rejectInsight, approveByType, rejectByType, getAllUsersCategoriesAnswers };
+async function getAllInsights(pool) {
+  const result = await pool.query(
+    `SELECT i.id,
+            i.user_id,
+            u.name AS author,
+            i.category_id,
+            c.name AS category,
+            i.title,
+            i.content,
+            i.link,
+            i.status,
+            i.approved_by,
+            i.created_at
+     FROM insights i
+     JOIN users u ON u.id = i.user_id
+     LEFT JOIN category c ON c.id = i.category_id
+     ORDER BY i.created_at DESC`
+  );
+  return result.rows;
+}
+
+async function getAllQuestions(pool) {
+  const result = await pool.query(
+    `SELECT q.id,
+            q.user_id,
+            u.name AS author,
+            q.category_id,
+            c.name AS category,
+            q.title,
+            q.content,
+            q.type,
+            q.status,
+            q.approved_by,
+            q.created_at
+     FROM questions q
+     JOIN users u ON u.id = q.user_id
+     LEFT JOIN category c ON c.id = q.category_id
+     ORDER BY q.created_at DESC`
+  );
+  return result.rows;
+}
+
+module.exports = {
+  approveInsight,
+  rejectInsight,
+  approveByType,
+  rejectByType,
+  getAllUsersCategoriesAnswers,
+  getAllInsights,
+  getAllQuestions,
+};
