@@ -306,3 +306,54 @@ test("covers all endpoints end-to-end", async () => {
   });
   assert.equal(legacyReject.response.status, 200);
 });
+
+test("POST /questions accepts categoryId when creating a question", async () => {
+  const stamp = `${Date.now()}-question-category`;
+  const mentorEmail = `mentor-${stamp}@example.com`;
+  cleanup.users.push(mentorEmail);
+
+  const registerMentor = await request("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({
+      name: "Mentor",
+      email: mentorEmail,
+      password: "pass123",
+      role: "mentor",
+    }),
+  });
+  assert.equal(registerMentor.response.status, 201);
+
+  const mentorLogin = await request("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email: mentorEmail, password: "pass123" }),
+  });
+  assert.equal(mentorLogin.response.status, 200);
+
+  const mentorAuth = { authorization: `Bearer ${mentorLogin.body.access_token}` };
+
+  const createdCategory = await request("/category", {
+    method: "POST",
+    body: JSON.stringify({ name: `Question Category ${stamp}` }),
+  });
+  assert.equal(createdCategory.response.status, 201);
+  cleanup.categories.push(createdCategory.body.id);
+
+  const questionCreate = await request("/questions", {
+    method: "POST",
+    headers: mentorAuth,
+    body: JSON.stringify({
+      title: `Question ${stamp}`,
+      content: "Need help",
+      categoryId: createdCategory.body.id,
+      type: "general",
+    }),
+  });
+  assert.equal(questionCreate.response.status, 201);
+
+  const dbQuestion = await pool.query(
+    `SELECT id FROM questions WHERE title = $1 ORDER BY created_at DESC LIMIT 1`,
+    [`Question ${stamp}`]
+  );
+  assert.equal(dbQuestion.rowCount, 1);
+  cleanup.questions.push(dbQuestion.rows[0].id);
+});

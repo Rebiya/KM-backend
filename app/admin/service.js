@@ -192,4 +192,31 @@ async function rejectByType(pool, { adminId, type, id }) {
   }
 }
 
-module.exports = { approveInsight, rejectInsight, approveByType, rejectByType };
+async function getAllUsersCategoriesAnswers(pool) {
+  const [usersResult, categoriesResult, answersResult] = await Promise.all([
+    pool.query(
+      `SELECT id, name, email, role, points, created_at
+       FROM users
+       ORDER BY created_at DESC`
+    ),
+    pool.query(
+      `SELECT id, name
+       FROM category
+       ORDER BY name ASC`
+    ),
+    pool.query(
+      `SELECT a.id, a.question_id, a.user_id, u.name AS author, a.content, a.status, a.approved_by, a.created_at
+       FROM answers a
+       JOIN users u ON u.id = a.user_id
+       ORDER BY a.created_at DESC`
+    ),
+  ]);
+
+  return {
+    users: usersResult.rows,
+    categories: categoriesResult.rows,
+    answers: answersResult.rows,
+  };
+}
+
+module.exports = { approveInsight, rejectInsight, approveByType, rejectByType, getAllUsersCategoriesAnswers };

@@ -1,7 +1,6 @@
 const express = require("express");
 
 const { requireAuth } = require("../auth/middleware");
-const { getCategoryById } = require("../category/service");
 const { isUuid, requireNonEmptyString } = require("../utils/validation");
 const { createQuestion, getApprovedQuestions } = require("./service");
 
@@ -12,18 +11,14 @@ function createQuestionsRouter({ pool }) {
     try {
       const title = requireNonEmptyString(req.body && req.body.title, "title");
       const content = requireNonEmptyString(req.body && req.body.content, "content");
-      const categoryId = String((req.body && req.body.category_id) || "").trim();
+      const rawCategoryId =
+        (req.body && (req.body.category_id || req.body.categoryId)) || "";
+      const categoryId = String(rawCategoryId).trim();
       const type = String((req.body && req.body.type) || "")
         .trim()
         .toLowerCase();
 
       if (!isUuid(categoryId)) {
-        const err = new Error("Invalid category");
-        err.statusCode = 400;
-        throw err;
-      }
-      const category = await getCategoryById(pool, categoryId);
-      if (!category) {
         const err = new Error("Invalid category");
         err.statusCode = 400;
         throw err;
@@ -44,6 +39,11 @@ function createQuestionsRouter({ pool }) {
 
       return res.status(201).json({ message: "Question submitted for approval" });
     } catch (e) {
+      if (e && e.code === "23503") {
+        const err = new Error("Invalid category");
+        err.statusCode = 400;
+        return next(err);
+      }
       return next(e);
     }
   });
@@ -61,4 +61,3 @@ function createQuestionsRouter({ pool }) {
 }
 
 module.exports = { createQuestionsRouter };
-

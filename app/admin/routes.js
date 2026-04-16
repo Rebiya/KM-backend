@@ -1,11 +1,31 @@
 const express = require("express");
 
 const { get_current_user, require_role } = require("../auth/middleware");
-const { approveInsight, rejectInsight, approveByType, rejectByType } = require("./service");
+const {
+  approveInsight,
+  rejectInsight,
+  approveByType,
+  rejectByType,
+  getAllUsersCategoriesAnswers,
+} = require("./service");
 const { isUuid } = require("../utils/validation");
 
 function createAdminRouter({ pool }) {
   const router = express.Router();
+
+  router.get(
+    "/overview",
+    get_current_user,
+    require_role("admin"),
+    async (_req, res, next) => {
+      try {
+        const data = await getAllUsersCategoriesAnswers(pool);
+        return res.json(data);
+      } catch (e) {
+        return next(e);
+      }
+    }
+  );
 
   router.post(
     "/approve/:type/:id",
