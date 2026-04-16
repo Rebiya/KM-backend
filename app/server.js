@@ -12,6 +12,7 @@ const { createVotesRouter } = require("./votes/routes");
 const { createCoursesRouter } = require("./courses/routes");
 const { createExitInterviewsRouter } = require("./exit-interviews/routes");
 const { createSearchRouter } = require("./search/routes");
+const { createPublicDataRouter } = require("./public-data/routes");
 const { createAdminRouter } = require("./admin/routes");
 
 async function createServer(options = {}) {
@@ -82,6 +83,7 @@ async function createServer(options = {}) {
   app.use("/courses", createCoursesRouter({ pool }));
   app.use("/exit-interviews", createExitInterviewsRouter({ pool }));
   app.use("/search", createSearchRouter({ pool }));
+  app.use("/", createPublicDataRouter({ pool }));
   app.use("/admin", createAdminRouter({ pool }));
 
   function getDefaultErrorMessage(status) {
